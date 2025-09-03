@@ -31,6 +31,6 @@ async function bootstrap() {
 
   await app.listen(8080);
   console.log('Backend server running on http://localhost:8080');
-  console.log('Swagger documentation: http://localhost:8080/api');
+  console.log('Swagger documentation: http://localhost:8080/api/docs');
 }
 bootstrap();
