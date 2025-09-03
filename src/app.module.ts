@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { PrismaModule } from 'prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { FarmersModule } from './farmers/farmers.module';
+import { CropsModule } from './crops/crops.module';
 // import { AuthModule } from './auth/auth.module';
 // import { FarmersModule } from './farmers/farmers.module';
 // import { CropsModule } from './crops/crops.module';
@@ -17,7 +18,7 @@ import { FarmersModule } from './farmers/farmers.module';
     PrismaModule,
     AuthModule,
     FarmersModule,
-    // CropsModule,
+    CropsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
