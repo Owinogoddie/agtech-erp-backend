@@ -1,5 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Injectable, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'prisma/prisma.service';
 import { Role } from '@prisma/client';
@@ -67,6 +73,12 @@ export class AuthService {
                 lastName: farmerData.lastName,
                 phone: farmerData.phone,
                 address: farmerData.address,
+                dateOfBirth: farmerData.dateOfBirth
+                  ? new Date(farmerData.dateOfBirth)
+                  : null,
+                nationalId: farmerData.nationalId,
+                farmSize: farmerData.farmSize,
+                farmLocation: farmerData.farmLocation,
               },
             }
           : undefined,
@@ -75,6 +87,37 @@ export class AuthService {
     });
 
     return this.login(user);
+  }
+
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const isCurrentPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.password,
+    );
+    if (!isCurrentPasswordValid) {
+      throw new BadRequestException('Current password is incorrect');
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedNewPassword },
+    });
+
+    return { message: 'Password changed successfully' };
   }
 
   async createAdmin(email: string, password: string) {

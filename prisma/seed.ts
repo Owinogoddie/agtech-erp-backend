@@ -19,7 +19,7 @@ async function main() {
 
   console.log('✅ Admin user created:', admin.email);
 
-  // Create sample farmers
+  // Create sample farmers with enhanced fields
   const farmer1Password = await bcrypt.hash('farmer123', 10);
 
   const farmer1 = await prisma.user.upsert({
@@ -35,6 +35,10 @@ async function main() {
           lastName: 'Doe',
           phone: '+1234567890',
           address: '123 Farm Road, Rural County',
+          dateOfBirth: new Date('1980-05-15'),
+          nationalId: 'ID123456789',
+          farmSize: 25.5,
+          farmLocation: 'North Valley Farm District',
         },
       },
     },
@@ -56,6 +60,10 @@ async function main() {
           lastName: 'Smith',
           phone: '+1987654321',
           address: '456 Agricultural Ave, Farm Valley',
+          dateOfBirth: new Date('1985-09-22'),
+          nationalId: 'ID987654321',
+          farmSize: 40.0,
+          farmLocation: 'South Valley Farm District',
         },
       },
     },
@@ -95,6 +103,13 @@ async function main() {
           quantity: 150.0,
           unit: 'kg',
           farmerId: farmer2.farmer.id,
+        },
+        {
+          name: 'Apples',
+          type: 'FRUITS',
+          quantity: 300.0,
+          unit: 'kg',
+          farmerId: farmer1.farmer.id,
         },
       ],
     });

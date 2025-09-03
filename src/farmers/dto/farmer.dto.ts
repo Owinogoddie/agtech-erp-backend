@@ -1,11 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsOptional,
+  IsNumber,
+  IsDateString,
+  MinLength,
+} from 'class-validator';
 
 export class CreateFarmerDto {
-  @ApiProperty()
-  @IsString()
-  userId: string;
-
   @ApiProperty()
   @IsString()
   firstName: string;
@@ -13,6 +16,15 @@ export class CreateFarmerDto {
   @ApiProperty()
   @IsString()
   lastName: string;
+
+  @ApiProperty()
+  @IsEmail()
+  email: string;
+
+  @ApiProperty()
+  @IsString()
+  @MinLength(6)
+  password: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
@@ -26,8 +38,23 @@ export class CreateFarmerDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
+  @IsDateString()
+  dateOfBirth?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
-  cooperativeId?: string;
+  nationalId?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsNumber()
+  farmSize?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  farmLocation?: string;
 }
 
 export class UpdateFarmerDto {
@@ -53,6 +80,21 @@ export class UpdateFarmerDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
+  @IsDateString()
+  dateOfBirth?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
-  cooperativeId?: string;
+  nationalId?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsNumber()
+  farmSize?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  farmLocation?: string;
 }

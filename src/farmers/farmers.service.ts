@@ -2,29 +2,59 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { CreateFarmerDto, UpdateFarmerDto } from './dto/farmer.dto';
 import { Role } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class FarmersService {
   constructor(private prisma: PrismaService) {}
 
   async create(createFarmerDto: CreateFarmerDto) {
-    return this.prisma.farmer.create({
-      data: createFarmerDto,
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            role: true,
+    // Check if user with email already exists
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: createFarmerDto.email },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('User with this email already exists');
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(createFarmerDto.password, 10);
+
+    // Create user with farmer profile
+    return this.prisma.user.create({
+      data: {
+        email: createFarmerDto.email,
+        password: hashedPassword,
+        role: Role.FARMER,
+        farmer: {
+          create: {
+            firstName: createFarmerDto.firstName,
+            lastName: createFarmerDto.lastName,
+            phone: createFarmerDto.phone,
+            address: createFarmerDto.address,
+            dateOfBirth: createFarmerDto.dateOfBirth
+              ? new Date(createFarmerDto.dateOfBirth)
+              : null,
+            nationalId: createFarmerDto.nationalId,
+            farmSize: createFarmerDto.farmSize,
+            farmLocation: createFarmerDto.farmLocation,
           },
         },
-        _count: {
-          select: {
-            crops: true,
+      },
+      include: {
+        farmer: {
+          include: {
+            _count: {
+              select: {
+                crops: true,
+              },
+            },
           },
         },
       },
@@ -88,7 +118,12 @@ export class FarmersService {
 
     return this.prisma.farmer.update({
       where: { id },
-      data: updateFarmerDto,
+      data: {
+        ...updateFarmerDto,
+        dateOfBirth: updateFarmerDto.dateOfBirth
+          ? new Date(updateFarmerDto.dateOfBirth)
+          : undefined,
+      },
       include: {
         user: {
           select: {
@@ -104,14 +139,16 @@ export class FarmersService {
   async remove(id: string) {
     const farmer = await this.prisma.farmer.findUnique({
       where: { id },
+      include: { user: true },
     });
 
     if (!farmer) {
       throw new NotFoundException('Farmer not found');
     }
 
-    return this.prisma.farmer.delete({
-      where: { id },
+    // Delete the user (farmer will be deleted via cascade)
+    return this.prisma.user.delete({
+      where: { id: farmer.userId },
     });
   }
 
@@ -131,9 +168,16 @@ export class FarmersService {
       },
     });
 
+    const averageFarmSize = await this.prisma.farmer.aggregate({
+      _avg: {
+        farmSize: true,
+      },
+    });
+
     return {
       totalFarmers,
       totalCrops,
+      averageFarmSize: averageFarmSize._avg.farmSize || 0,
       cropsPerFarmer,
     };
   }
